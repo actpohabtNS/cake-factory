@@ -53,6 +53,8 @@ func newTestUserService() *UserService {
 	return &UserService{
 		repository: NewInMemoryUserStorage(),
 		notifier:   make(chan []byte),
+		reg:        make(chan []bool),
+		cake:       make(chan []bool),
 	}
 }
 

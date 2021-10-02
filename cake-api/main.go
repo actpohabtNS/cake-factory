@@ -41,6 +41,7 @@ func newRouter(us *UserService, jwtService *JWTService) *mux.Router {
 	r := mux.NewRouter()
 
 	go runPublisher(us.notifier)
+	go startProm()
 
 	r.HandleFunc("/user/register", us.Register).Methods(http.MethodPost)
 	r.HandleFunc("/user/jwt", wrapJwt(jwtService, us.JWT)).Methods(http.MethodPost)
@@ -60,6 +61,9 @@ func newRouter(us *UserService, jwtService *JWTService) *mux.Router {
 func newLoggingRouter(us *UserService, jwtService *JWTService) *mux.Router {
 	createEnvVars()
 	r := mux.NewRouter()
+
+	go runPublisher(us.notifier)
+	go startProm()
 
 	r.HandleFunc("/user/register", logRequest(us.Register)).Methods(http.MethodPost)
 	r.HandleFunc("/user/jwt", logRequest(wrapJwt(jwtService, us.JWT))).Methods(http.MethodPost)

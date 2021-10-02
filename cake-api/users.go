@@ -26,6 +26,8 @@ type UserRepository interface {
 type UserService struct {
 	repository UserRepository
 	notifier   chan []byte
+	reg        chan []bool
+	cake       chan []bool
 }
 type UserRegisterParams struct {
 	Email        string `json:"email"`
@@ -108,12 +110,14 @@ func (u *UserService) Register(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	_, _ = w.Write([]byte("registered"))
 	u.notifier <- []byte("registered: " + newUser.Email)
+	registeredUsers.Inc()
 }
 
 func getCakeHandler(w http.ResponseWriter, _ *http.Request, u User, us UserService) {
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("[" + u.Email + "], your favourite cake is " + u.FavoriteCake))
 	us.notifier <- []byte("cake " + u.FavoriteCake + " is given to " + u.Email)
+	cakesGiven.Inc()
 }
 
 func updateCakeHandler(w http.ResponseWriter, r *http.Request, u User, us UserService) {

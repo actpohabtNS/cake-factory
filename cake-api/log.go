@@ -38,6 +38,8 @@ func logRequest(h http.HandlerFunc) http.HandlerFunc {
 		started := time.Now()
 		h(writer, r)
 		done := time.Since(started)
+		requestRecords.WithLabelValues(r.URL.Path).Observe(done.Seconds())
+
 		log.Printf(
 			"PATH: %s -> %d. Finished in %v.\n\tParams: %s\n\tResponse: %s",
 			r.URL.Path,
