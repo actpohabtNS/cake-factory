@@ -1,8 +1,8 @@
 package main
 
 import (
-	"cake-factory/jwt"
 	"flag"
+	"github.com/actpohabtNS/cake-factory/jwt"
 	"log"
 	"net/http"
 	"strings"

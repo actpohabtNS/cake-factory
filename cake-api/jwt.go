@@ -1,10 +1,10 @@
 package main
 
 import (
-	"cake-factory/jwt"
 	"crypto/md5"
 	"encoding/json"
 	"errors"
+	"github.com/actpohabtNS/cake-factory/jwt"
 	"net/http"
 	"strings"
 )
