@@ -25,6 +25,7 @@ type UserRepository interface {
 
 type UserService struct {
 	repository UserRepository
+	notifier   chan []byte
 }
 type UserRegisterParams struct {
 	Email        string `json:"email"`
@@ -106,14 +107,16 @@ func (u *UserService) Register(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusCreated)
 	_, _ = w.Write([]byte("registered"))
+	u.notifier <- []byte("registered: " + newUser.Email)
 }
 
-func getCakeHandler(w http.ResponseWriter, _ *http.Request, u User, _ UserRepository) {
+func getCakeHandler(w http.ResponseWriter, _ *http.Request, u User, us UserService) {
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("[" + u.Email + "], your favourite cake is " + u.FavoriteCake))
+	us.notifier <- []byte("cake " + u.FavoriteCake + " is given to " + u.Email)
 }
 
-func updateCakeHandler(w http.ResponseWriter, r *http.Request, u User, users UserRepository) {
+func updateCakeHandler(w http.ResponseWriter, r *http.Request, u User, us UserService) {
 	params := &UserRegisterParams{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
@@ -139,16 +142,17 @@ func updateCakeHandler(w http.ResponseWriter, r *http.Request, u User, users Use
 		FavoriteCake:   params.FavoriteCake,
 	}
 
-	err = users.Update(params.Email, updatedUser)
+	err = us.repository.Update(params.Email, updatedUser)
 	if err != nil {
 		handleUnprocError(err, w)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("favorite cake updated"))
+	us.notifier <- []byte(u.Email + " has updated favorite cake")
 }
 
-func updateEmailHandler(w http.ResponseWriter, r *http.Request, u User, users UserRepository) {
+func updateEmailHandler(w http.ResponseWriter, r *http.Request, u User, us UserService) {
 	params := &UserRegisterParams{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
@@ -174,22 +178,23 @@ func updateEmailHandler(w http.ResponseWriter, r *http.Request, u User, users Us
 		FavoriteCake:   params.FavoriteCake,
 	}
 
-	err = users.Add(updatedUser.Email, updatedUser)
+	err = us.repository.Add(updatedUser.Email, updatedUser)
 	if err != nil {
 		handleUnprocError(err, w)
 		return
 	}
 
-	_, err = users.Delete(u.Email)
+	_, err = us.repository.Delete(u.Email)
 	if err != nil {
 		handleUnprocError(err, w)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("email updated"))
+	us.notifier <- []byte(u.Email + " has updated email")
 }
 
-func updatePasswordHandler(w http.ResponseWriter, r *http.Request, u User, users UserRepository) {
+func updatePasswordHandler(w http.ResponseWriter, r *http.Request, u User, us UserService) {
 	params := &UserRegisterParams{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
@@ -215,13 +220,14 @@ func updatePasswordHandler(w http.ResponseWriter, r *http.Request, u User, users
 		FavoriteCake:   params.FavoriteCake,
 	}
 
-	err = users.Update(params.Email, updatedUser)
+	err = us.repository.Update(params.Email, updatedUser)
 	if err != nil {
 		handleUnprocError(err, w)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("password updated"))
+	us.notifier <- []byte(u.Email + " has updated password")
 }
 
 func handleUnprocError(err error, w http.ResponseWriter) {

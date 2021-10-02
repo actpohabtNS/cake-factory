@@ -74,9 +74,9 @@ func (u *UserService) JWT(w http.ResponseWriter, r *http.Request, jwtService *JW
 	_, _ = w.Write([]byte(token))
 }
 
-type ProtectedHandler func(rw http.ResponseWriter, r *http.Request, u User, users UserRepository)
+type ProtectedHandler func(rw http.ResponseWriter, r *http.Request, u User, userService UserService)
 
-func (j *JWTService) jwtAuthRoleExecutor(minimalAccessRole Role, users UserRepository, h ProtectedHandler) http.HandlerFunc {
+func (j *JWTService) jwtAuthRoleExecutor(minimalAccessRole Role, us UserService, h ProtectedHandler) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		token := strings.TrimPrefix(authHeader, "Bearer ")
@@ -85,7 +85,7 @@ func (j *JWTService) jwtAuthRoleExecutor(minimalAccessRole Role, users UserRepos
 			handleUnauthError(errors.New("unauthorized"), rw)
 			return
 		}
-		user, err := users.Get(jwtAuth.Email)
+		user, err := us.repository.Get(jwtAuth.Email)
 		if err != nil {
 			handleUnauthError(errors.New("unauthorized"), rw)
 			return
@@ -100,18 +100,18 @@ func (j *JWTService) jwtAuthRoleExecutor(minimalAccessRole Role, users UserRepos
 			handleUnauthError(errors.New("permission denied"), rw)
 			return
 		}
-		h(rw, r, user, users)
+		h(rw, r, user, us)
 	}
 }
 
-func (j *JWTService) jwtAuth(users UserRepository, h ProtectedHandler) http.HandlerFunc {
-	return j.jwtAuthRoleExecutor(UserRole, users, h)
+func (j *JWTService) jwtAuth(us UserService, h ProtectedHandler) http.HandlerFunc {
+	return j.jwtAuthRoleExecutor(UserRole, us, h)
 }
 
-func (j *JWTService) jwtAuthAdmin(users UserRepository, h ProtectedHandler) http.HandlerFunc {
-	return j.jwtAuthRoleExecutor(AdminRole, users, h)
+func (j *JWTService) jwtAuthAdmin(us UserService, h ProtectedHandler) http.HandlerFunc {
+	return j.jwtAuthRoleExecutor(AdminRole, us, h)
 }
 
-func (j *JWTService) jwtAuthSuperAdmin(users UserRepository, h ProtectedHandler) http.HandlerFunc {
-	return j.jwtAuthRoleExecutor(SuperAdminRole, users, h)
+func (j *JWTService) jwtAuthSuperAdmin(us UserService, h ProtectedHandler) http.HandlerFunc {
+	return j.jwtAuthRoleExecutor(SuperAdminRole, us, h)
 }

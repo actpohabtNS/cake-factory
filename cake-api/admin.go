@@ -37,7 +37,7 @@ const banTimeFormat = "02 January 2006 01:02:03"
 
 type BanHistory []BanHistoryQuery
 
-func banHandler(w http.ResponseWriter, r *http.Request, executor User, users UserRepository) {
+func banHandler(w http.ResponseWriter, r *http.Request, executor User, us UserService) {
 	params := &UserBanParams{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
@@ -50,7 +50,7 @@ func banHandler(w http.ResponseWriter, r *http.Request, executor User, users Use
 		return
 	}
 
-	user, getErr := users.Get(params.Email)
+	user, getErr := us.repository.Get(params.Email)
 	if getErr != nil {
 		handleUnprocError(getErr, w)
 		return
@@ -70,16 +70,17 @@ func banHandler(w http.ResponseWriter, r *http.Request, executor User, users Use
 	user.Banned = true
 	user.BanHistory = append(user.BanHistory, banHistoryQuery)
 
-	err = users.Update(user.Email, user)
+	err = us.repository.Update(user.Email, user)
 	if err != nil {
 		handleUnprocError(err, w)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("user " + user.Email + " banned"))
+	us.notifier <- []byte("admin " + executor.Email + " banned user " + user.Email)
 }
 
-func unbanHandler(w http.ResponseWriter, r *http.Request, executor User, users UserRepository) {
+func unbanHandler(w http.ResponseWriter, r *http.Request, executor User, us UserService) {
 	params := &UserUnbanParams{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
@@ -92,7 +93,7 @@ func unbanHandler(w http.ResponseWriter, r *http.Request, executor User, users U
 		return
 	}
 
-	user, getErr := users.Get(params.Email)
+	user, getErr := us.repository.Get(params.Email)
 	if getErr != nil {
 		handleUnprocError(getErr, w)
 		return
@@ -112,19 +113,20 @@ func unbanHandler(w http.ResponseWriter, r *http.Request, executor User, users U
 	user.Banned = false
 	user.BanHistory = append(user.BanHistory, banHistoryQuery)
 
-	err = users.Update(user.Email, user)
+	err = us.repository.Update(user.Email, user)
 	if err != nil {
 		handleUnprocError(err, w)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("user " + user.Email + " unbanned"))
+	us.notifier <- []byte("admin " + executor.Email + " unbanned user " + user.Email)
 }
 
-func inspectHandler(w http.ResponseWriter, r *http.Request, _ User, users UserRepository) {
+func inspectHandler(w http.ResponseWriter, r *http.Request, executor User, us UserService) {
 	email := r.URL.Query().Get("email")
 
-	user, getErr := users.Get(email)
+	user, getErr := us.repository.Get(email)
 	if getErr != nil {
 		handleUnprocError(getErr, w)
 		return
@@ -145,23 +147,24 @@ func inspectHandler(w http.ResponseWriter, r *http.Request, _ User, users UserRe
 
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("user " + user.Email + ":\n" + banHistoryStr))
+	us.notifier <- []byte("admin " + executor.Email + " requested for ban history of user " + user.Email)
 }
 
-func promoteHandler(w http.ResponseWriter, r *http.Request, _ User, users UserRepository) {
+func promoteHandler(w http.ResponseWriter, r *http.Request, executor User, us UserService) {
 	params := &EmailParams{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
 		handleUnprocError(errors.New("could not read params"), w)
 		return
 	}
-	user, getErr := users.Get(params.Email)
+	user, getErr := us.repository.Get(params.Email)
 	if getErr != nil {
 		handleUnprocError(getErr, w)
 		return
 	}
 
 	user.Role = AdminRole
-	err = users.Update(user.Email, user)
+	err = us.repository.Update(user.Email, user)
 	if err != nil {
 		handleUnprocError(err, w)
 		return
@@ -169,23 +172,24 @@ func promoteHandler(w http.ResponseWriter, r *http.Request, _ User, users UserRe
 
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("user " + user.Email + " promoted to admin"))
+	us.notifier <- []byte("admin " + executor.Email + " promoted user " + user.Email)
 }
 
-func fireHandler(w http.ResponseWriter, r *http.Request, _ User, users UserRepository) {
+func fireHandler(w http.ResponseWriter, r *http.Request, executor User, us UserService) {
 	params := &EmailParams{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
 		handleUnprocError(errors.New("could not read params"), w)
 		return
 	}
-	user, getErr := users.Get(params.Email)
+	user, getErr := us.repository.Get(params.Email)
 	if getErr != nil {
 		handleUnprocError(getErr, w)
 		return
 	}
 
 	user.Role = UserRole
-	err = users.Update(user.Email, user)
+	err = us.repository.Update(user.Email, user)
 	if err != nil {
 		handleUnprocError(err, w)
 		return
@@ -193,4 +197,5 @@ func fireHandler(w http.ResponseWriter, r *http.Request, _ User, users UserRepos
 
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("admin " + user.Email + " downgraded to user"))
+	us.notifier <- []byte("admin " + executor.Email + " fired admin " + user.Email)
 }

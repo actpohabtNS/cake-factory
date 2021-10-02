@@ -23,7 +23,7 @@ func createEnvVars() {
 	_ = os.Setenv("CAKE_SUPERADMIN_CAKE", "bestManCake")
 }
 
-func processEnvVars(u *UserService) {
+func processEnvVars(us *UserService) {
 	passwordDigest := md5.New().Sum([]byte(os.Getenv("CAKE_SUPERADMIN_PASSWORD")))
 	supadmin := User{
 		Email:          os.Getenv("CAKE_SUPERADMIN_EMAIL"),
@@ -33,50 +33,52 @@ func processEnvVars(u *UserService) {
 		FavoriteCake:   os.Getenv("CAKE_SUPERADMIN_CAKE"),
 		BanHistory:     BanHistory{},
 	}
-	_ = u.repository.Add(supadmin.Email, supadmin)
+	_ = us.repository.Add(supadmin.Email, supadmin)
 }
 
-func newRouter(u *UserService, jwtService *JWTService) *mux.Router {
+func newRouter(us *UserService, jwtService *JWTService) *mux.Router {
 	createEnvVars()
 	r := mux.NewRouter()
 
-	r.HandleFunc("/user/register", u.Register).Methods(http.MethodPost)
-	r.HandleFunc("/user/jwt", wrapJwt(jwtService, u.JWT)).Methods(http.MethodPost)
-	r.HandleFunc("/user/me", jwtService.jwtAuth(u.repository, getCakeHandler)).Methods(http.MethodGet)
-	r.HandleFunc("/user/favorite_cake", jwtService.jwtAuth(u.repository, updateCakeHandler)).Methods(http.MethodPut)
-	r.HandleFunc("/user/email", jwtService.jwtAuth(u.repository, updateEmailHandler)).Methods(http.MethodPut)
-	r.HandleFunc("/user/password", jwtService.jwtAuth(u.repository, updatePasswordHandler)).Methods(http.MethodPut)
-	r.HandleFunc("/admin/ban", jwtService.jwtAuthAdmin(u.repository, banHandler)).Methods(http.MethodPost)
-	r.HandleFunc("/admin/unban", jwtService.jwtAuthAdmin(u.repository, unbanHandler)).Methods(http.MethodPost)
-	r.HandleFunc("/admin/inspect", jwtService.jwtAuthAdmin(u.repository, inspectHandler)).Methods(http.MethodGet)
-	r.HandleFunc("/admin/promote", jwtService.jwtAuthSuperAdmin(u.repository, promoteHandler)).Methods(http.MethodPost)
-	r.HandleFunc("/admin/fire", jwtService.jwtAuthSuperAdmin(u.repository, fireHandler)).Methods(http.MethodPost)
-	processEnvVars(u)
+	go runPublisher(us.notifier)
+
+	r.HandleFunc("/user/register", us.Register).Methods(http.MethodPost)
+	r.HandleFunc("/user/jwt", wrapJwt(jwtService, us.JWT)).Methods(http.MethodPost)
+	r.HandleFunc("/user/me", jwtService.jwtAuth(*us, getCakeHandler)).Methods(http.MethodGet)
+	r.HandleFunc("/user/favorite_cake", jwtService.jwtAuth(*us, updateCakeHandler)).Methods(http.MethodPut)
+	r.HandleFunc("/user/email", jwtService.jwtAuth(*us, updateEmailHandler)).Methods(http.MethodPut)
+	r.HandleFunc("/user/password", jwtService.jwtAuth(*us, updatePasswordHandler)).Methods(http.MethodPut)
+	r.HandleFunc("/admin/ban", jwtService.jwtAuthAdmin(*us, banHandler)).Methods(http.MethodPost)
+	r.HandleFunc("/admin/unban", jwtService.jwtAuthAdmin(*us, unbanHandler)).Methods(http.MethodPost)
+	r.HandleFunc("/admin/inspect", jwtService.jwtAuthAdmin(*us, inspectHandler)).Methods(http.MethodGet)
+	r.HandleFunc("/admin/promote", jwtService.jwtAuthSuperAdmin(*us, promoteHandler)).Methods(http.MethodPost)
+	r.HandleFunc("/admin/fire", jwtService.jwtAuthSuperAdmin(*us, fireHandler)).Methods(http.MethodPost)
+	processEnvVars(us)
 	return r
 }
 
-func newLoggingRouter(u *UserService, jwtService *JWTService) *mux.Router {
+func newLoggingRouter(us *UserService, jwtService *JWTService) *mux.Router {
 	createEnvVars()
 	r := mux.NewRouter()
 
-	r.HandleFunc("/user/register", logRequest(u.Register)).Methods(http.MethodPost)
-	r.HandleFunc("/user/jwt", logRequest(wrapJwt(jwtService, u.JWT))).Methods(http.MethodPost)
-	r.HandleFunc("/user/me", logRequest(jwtService.jwtAuth(u.repository, getCakeHandler))).Methods(http.MethodGet)
-	r.HandleFunc("/user/favorite_cake", logRequest(jwtService.jwtAuth(u.repository, getCakeHandler))).Methods(http.MethodPut)
-	r.HandleFunc("/user/email", logRequest(jwtService.jwtAuth(u.repository, updateEmailHandler))).Methods(http.MethodPut)
-	r.HandleFunc("/user/password", logRequest(jwtService.jwtAuth(u.repository, updatePasswordHandler))).Methods(http.MethodPut)
-	r.HandleFunc("/admin/ban", logRequest(jwtService.jwtAuthAdmin(u.repository, banHandler))).Methods(http.MethodPost)
-	r.HandleFunc("/admin/unban", logRequest(jwtService.jwtAuthAdmin(u.repository, unbanHandler))).Methods(http.MethodPost)
-	r.HandleFunc("/admin/inspect", logRequest(jwtService.jwtAuthAdmin(u.repository, inspectHandler))).Methods(http.MethodGet)
-	r.HandleFunc("/admin/promote", logRequest(jwtService.jwtAuthSuperAdmin(u.repository, inspectHandler))).Methods(http.MethodPost)
-	r.HandleFunc("/admin/fire", logRequest(jwtService.jwtAuthSuperAdmin(u.repository, fireHandler))).Methods(http.MethodPost)
-	processEnvVars(u)
+	r.HandleFunc("/user/register", logRequest(us.Register)).Methods(http.MethodPost)
+	r.HandleFunc("/user/jwt", logRequest(wrapJwt(jwtService, us.JWT))).Methods(http.MethodPost)
+	r.HandleFunc("/user/me", logRequest(jwtService.jwtAuth(*us, getCakeHandler))).Methods(http.MethodGet)
+	r.HandleFunc("/user/favorite_cake", logRequest(jwtService.jwtAuth(*us, getCakeHandler))).Methods(http.MethodPut)
+	r.HandleFunc("/user/email", logRequest(jwtService.jwtAuth(*us, updateEmailHandler))).Methods(http.MethodPut)
+	r.HandleFunc("/user/password", logRequest(jwtService.jwtAuth(*us, updatePasswordHandler))).Methods(http.MethodPut)
+	r.HandleFunc("/admin/ban", logRequest(jwtService.jwtAuthAdmin(*us, banHandler))).Methods(http.MethodPost)
+	r.HandleFunc("/admin/unban", logRequest(jwtService.jwtAuthAdmin(*us, unbanHandler))).Methods(http.MethodPost)
+	r.HandleFunc("/admin/inspect", logRequest(jwtService.jwtAuthAdmin(*us, inspectHandler))).Methods(http.MethodGet)
+	r.HandleFunc("/admin/promote", logRequest(jwtService.jwtAuthSuperAdmin(*us, inspectHandler))).Methods(http.MethodPost)
+	r.HandleFunc("/admin/fire", logRequest(jwtService.jwtAuthSuperAdmin(*us, fireHandler))).Methods(http.MethodPost)
+	processEnvVars(us)
 	return r
 }
 
 func main() {
 	users := NewInMemoryUserStorage()
-	userService := UserService{repository: users}
+	userService := UserService{repository: users, notifier: make(chan []byte)}
 
 	jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
 	if jwtErr != nil {

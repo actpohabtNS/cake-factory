@@ -52,6 +52,7 @@ func prepareParams(t *testing.T, params map[string]interface{}) io.Reader {
 func newTestUserService() *UserService {
 	return &UserService{
 		repository: NewInMemoryUserStorage(),
+		notifier:   make(chan []byte),
 	}
 }
 
