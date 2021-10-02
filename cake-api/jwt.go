@@ -1,32 +1,21 @@
 package main
 
 import (
+	"cake-factory/jwt"
 	"crypto/md5"
 	"encoding/json"
 	"errors"
-	"github.com/openware/rango/pkg/auth"
 	"net/http"
 	"strings"
 )
 
-type JWTService struct {
-	keys *auth.KeyStore
+type MyJWTService struct {
+	*jwt.JWTService
 }
 
-func NewJWTService(privKeyPath, pubKeyPath string) (*JWTService, error) {
-	keys, err := auth.LoadOrGenerateKeys(privKeyPath, pubKeyPath)
-	if err != nil {
-		return nil, err
-	}
-	return &JWTService{keys: keys}, nil
-}
-
-func (j *JWTService) GenerateJWT(u User) (string, error) {
-	return auth.ForgeToken("empty", u.Email, "empty", 0, j.keys.PrivateKey, nil)
-}
-
-func (j *JWTService) ParseJWT(jwt string) (auth.Auth, error) {
-	return auth.ParseAndValidate(jwt, j.keys.PublicKey)
+func MyNewJWTService() (*MyJWTService, error) {
+	jwtService, err := jwt.NewJWTService()
+	return &MyJWTService{jwtService}, err
 }
 
 type JWTParams struct {
@@ -34,7 +23,7 @@ type JWTParams struct {
 	Password string `json:"password"`
 }
 
-func (u *UserService) JWT(w http.ResponseWriter, r *http.Request, jwtService *JWTService) {
+func (u *UserService) JWT(w http.ResponseWriter, r *http.Request, jwtService *MyJWTService) {
 	params := &JWTParams{}
 	decErr := json.NewDecoder(r.Body).Decode(params)
 
@@ -63,7 +52,7 @@ func (u *UserService) JWT(w http.ResponseWriter, r *http.Request, jwtService *JW
 		return
 	}
 
-	token, jwtErr := jwtService.GenerateJWT(user)
+	token, jwtErr := jwtService.GenerateJWT(user.Email)
 
 	if jwtErr != nil {
 		handleUnprocError(jwtErr, w)
@@ -76,7 +65,7 @@ func (u *UserService) JWT(w http.ResponseWriter, r *http.Request, jwtService *JW
 
 type ProtectedHandler func(rw http.ResponseWriter, r *http.Request, u User, userService UserService)
 
-func (j *JWTService) jwtAuthRoleExecutor(minimalAccessRole Role, us UserService, h ProtectedHandler) http.HandlerFunc {
+func (j *MyJWTService) jwtAuthRoleExecutor(minimalAccessRole Role, us UserService, h ProtectedHandler) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		token := strings.TrimPrefix(authHeader, "Bearer ")
@@ -104,14 +93,14 @@ func (j *JWTService) jwtAuthRoleExecutor(minimalAccessRole Role, us UserService,
 	}
 }
 
-func (j *JWTService) jwtAuth(us UserService, h ProtectedHandler) http.HandlerFunc {
+func (j *MyJWTService) jwtAuth(us UserService, h ProtectedHandler) http.HandlerFunc {
 	return j.jwtAuthRoleExecutor(UserRole, us, h)
 }
 
-func (j *JWTService) jwtAuthAdmin(us UserService, h ProtectedHandler) http.HandlerFunc {
+func (j *MyJWTService) jwtAuthAdmin(us UserService, h ProtectedHandler) http.HandlerFunc {
 	return j.jwtAuthRoleExecutor(AdminRole, us, h)
 }
 
-func (j *JWTService) jwtAuthSuperAdmin(us UserService, h ProtectedHandler) http.HandlerFunc {
+func (j *MyJWTService) jwtAuthSuperAdmin(us UserService, h ProtectedHandler) http.HandlerFunc {
 	return j.jwtAuthRoleExecutor(SuperAdminRole, us, h)
 }

@@ -16,7 +16,7 @@ func main() {
 	go hub.run()
 	go hub.receive()
 
-	jwtService, err := jwt.NewJWTService("pubkey.rsa", "privkey.rsa")
+	jwtService, err := jwt.NewJWTService()
 	if err != nil {
 		panic(err)
 	}

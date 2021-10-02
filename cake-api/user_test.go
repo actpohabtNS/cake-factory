@@ -75,7 +75,7 @@ func TestUsers_JWT(t *testing.T) {
 	doRequest := createRequester(t)
 	t.Run("user does not exist", func(t *testing.T) {
 		u := newTestUserService()
-		j, err := NewJWTService("pubkey.rsa", "privkey.rsa")
+		j, err := MyNewJWTService()
 		if err != nil {
 			t.FailNow()
 		}
@@ -124,7 +124,7 @@ func TestUsers_JWT(t *testing.T) {
 	t.Run("wrong password", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}
@@ -151,7 +151,7 @@ func TestUsers_JWT(t *testing.T) {
 	t.Run("getting cake without jwt", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}
@@ -174,7 +174,7 @@ func TestUsers_JWT(t *testing.T) {
 	t.Run("getting user info", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}
@@ -204,7 +204,7 @@ func TestUsers_JWT(t *testing.T) {
 	t.Run("changing login must be an email", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}
@@ -244,7 +244,7 @@ func TestUsers_JWT(t *testing.T) {
 	t.Run("short updating password", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}
@@ -322,7 +322,7 @@ func TestUsers_JWT(t *testing.T) {
 	t.Run("updating favorite cake", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}
@@ -370,7 +370,7 @@ func TestUsers_JWT(t *testing.T) {
 	t.Run("updating email", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}
@@ -425,7 +425,7 @@ func TestUsers_JWT(t *testing.T) {
 	t.Run("updating password", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}
@@ -473,7 +473,7 @@ func TestUsers_JWT(t *testing.T) {
 	t.Run("updating password of another user with my jwt", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}

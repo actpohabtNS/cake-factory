@@ -13,7 +13,7 @@ func TestAdmin_JWT(t *testing.T) {
 	t.Run("getting supadmin jwt", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}
@@ -32,7 +32,7 @@ func TestAdmin_JWT(t *testing.T) {
 	t.Run("deny regular user access admin api", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}
@@ -70,7 +70,7 @@ func TestAdmin_JWT(t *testing.T) {
 	t.Run("banning user", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}
@@ -119,7 +119,7 @@ func TestAdmin_JWT(t *testing.T) {
 	t.Run("banning user with wrong email", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}
@@ -158,7 +158,7 @@ func TestAdmin_JWT(t *testing.T) {
 	t.Run("banning not existing user", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}
@@ -189,7 +189,7 @@ func TestAdmin_JWT(t *testing.T) {
 	t.Run("banned user accessing api with jwt", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}
@@ -242,7 +242,7 @@ func TestAdmin_JWT(t *testing.T) {
 	t.Run("unbanning user", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}
@@ -295,7 +295,7 @@ func TestAdmin_JWT(t *testing.T) {
 	t.Run("inspecting user with ban history", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}
@@ -355,7 +355,7 @@ func TestAdmin_JWT(t *testing.T) {
 	t.Run("promoting user", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}
@@ -417,7 +417,7 @@ func TestAdmin_JWT(t *testing.T) {
 	t.Run("admin accessing superadmin api", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}
@@ -478,7 +478,7 @@ func TestAdmin_JWT(t *testing.T) {
 	t.Run("firing admin", func(t *testing.T) {
 		u := newTestUserService()
 
-		jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+		jwtService, jwtErr := MyNewJWTService()
 		if jwtErr != nil {
 			panic(jwtErr)
 		}

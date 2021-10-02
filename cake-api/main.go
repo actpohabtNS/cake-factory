@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func wrapJwt(jwt *JWTService, f func(http.ResponseWriter, *http.Request, *JWTService)) http.HandlerFunc {
+func wrapJwt(jwt *MyJWTService, f func(http.ResponseWriter, *http.Request, *MyJWTService)) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		f(rw, r, jwt)
 	}
@@ -36,7 +36,7 @@ func processEnvVars(us *UserService) {
 	_ = us.repository.Add(supadmin.Email, supadmin)
 }
 
-func newRouter(us *UserService, jwtService *JWTService) *mux.Router {
+func newRouter(us *UserService, jwtService *MyJWTService) *mux.Router {
 	createEnvVars()
 	r := mux.NewRouter()
 
@@ -58,7 +58,7 @@ func newRouter(us *UserService, jwtService *JWTService) *mux.Router {
 	return r
 }
 
-func newLoggingRouter(us *UserService, jwtService *JWTService) *mux.Router {
+func newLoggingRouter(us *UserService, jwtService *MyJWTService) *mux.Router {
 	createEnvVars()
 	r := mux.NewRouter()
 
@@ -84,7 +84,7 @@ func main() {
 	users := NewInMemoryUserStorage()
 	userService := UserService{repository: users, notifier: make(chan []byte)}
 
-	jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
+	jwtService, jwtErr := MyNewJWTService()
 	if jwtErr != nil {
 		panic(jwtErr)
 	}
