@@ -3,8 +3,8 @@ package jwt
 import "github.com/openware/rango/pkg/auth"
 
 const (
-	privKeyPath = "privkey.rsa"
-	pubKeyPath  = "pubkey.rsa"
+	privKeyPath = "../keys/privkey.rsa"
+	pubKeyPath  = "../keys/pubkey.rsa"
 )
 
 type JWTService struct {
