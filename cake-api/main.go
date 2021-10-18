@@ -40,9 +40,6 @@ func newRouter(us *UserService, jwtService *MyJWTService) *mux.Router {
 	createEnvVars()
 	r := mux.NewRouter()
 
-	go runPublisher(us.notifier)
-	go startProm()
-
 	r.HandleFunc("/user/register", us.Register).Methods(http.MethodPost)
 	r.HandleFunc("/user/jwt", wrapJwt(jwtService, us.JWT)).Methods(http.MethodPost)
 	r.HandleFunc("/user/me", jwtService.jwtAuth(*us, getCakeHandler)).Methods(http.MethodGet)
@@ -62,9 +59,6 @@ func newLoggingRouter(us *UserService, jwtService *MyJWTService) *mux.Router {
 	createEnvVars()
 	r := mux.NewRouter()
 
-	go runPublisher(us.notifier)
-	go startProm()
-
 	r.HandleFunc("/user/register", logRequest(us.Register)).Methods(http.MethodPost)
 	r.HandleFunc("/user/jwt", logRequest(wrapJwt(jwtService, us.JWT))).Methods(http.MethodPost)
 	r.HandleFunc("/user/me", logRequest(jwtService.jwtAuth(*us, getCakeHandler))).Methods(http.MethodGet)
@@ -80,6 +74,11 @@ func newLoggingRouter(us *UserService, jwtService *MyJWTService) *mux.Router {
 	return r
 }
 
+func runServices(us *UserService) {
+	go runPublisher(us.notifier)
+	go startProm()
+}
+
 func main() {
 	users := NewInMemoryUserStorage()
 	userService := UserService{repository: users, notifier: make(chan []byte)}
@@ -90,6 +89,7 @@ func main() {
 	}
 
 	r := newLoggingRouter(&userService, jwtService)
+	runServices(&userService)
 
 	srv := http.Server{
 		Addr:    ":8080",
