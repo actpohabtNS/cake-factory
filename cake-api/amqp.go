@@ -35,8 +35,7 @@ func runPublisher(send chan []byte) {
 		log.Fatalf("Failed to declare a queue: %s", err)
 	}
 
-	for {
-		body := <-send
+	for body := range send {
 		err = ch.Publish(
 			"",
 			q.Name,
